@@ -3,6 +3,46 @@ const Contact = require("../models/contact-model.js");
 
 jest.mock("../models/contact-model.js");
 
+// Test case: No contacts found
+it('should return an empty array when no contacts are found', async () => {
+  const mockUserId = '123';
+  const mockRequest = {
+    user: { id: mockUserId },
+  };
+  const mockResponse = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  };
+  jest.spyOn(Contact, 'find').mockResolvedValue([]);
+
+  await getContact(mockRequest, mockResponse);
+
+  expect(Contact.find).toHaveBeenCalledWith({ user_id: mockUserId });
+  expect(mockResponse.status).toHaveBeenCalledWith(200);
+  expect(mockResponse.json).toHaveBeenCalledWith([]);
+});
+
+// Test case: Database error
+it('should handle database errors and return an error response', async () => {
+  const mockUserId = '123';
+  const mockError = new Error('Database error');
+  const mockRequest = {
+    user: { id: mockUserId },
+  };
+  const mockResponse = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  };
+  jest.spyOn(Contact, 'find').mockResolvedValue(mockError);
+  try{
+  await getContact(mockRequest, mockResponse);
+  }catch(error){
+  expect(Contact.find).toHaveBeenCalledWith({ user_id: mockUserId });
+  expect(mockResponse.status).toHaveBeenCalledWith(500);
+  expect(mockResponse.json).toHaveBeenCalledWith({ error: mockError.message });
+}
+});
+
 const mockRequest = {
   user: {
     id: "123456",

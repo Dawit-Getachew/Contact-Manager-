@@ -41,11 +41,11 @@ const createContact = asyncHandler(async (req, res) => {
 const deleteContact = asyncHandler(async (req, res)=> {
     const contact = await Contact.findById(req.params.id);
     if(!contact){
-        res.status(404);
+        res.status(404).json({"error": "Contact does not exist"});
         throw new Error("Contact does not exist!")
     }
     if(contact.user_id.toString() !== req.user.id){
-        res.status(403)
+        res.status(403).json({"error":"User doesn't have permission to delete other user\'s contact"})
         throw new Error("User don't have permission to delete other user contacts")
     }
     await Contact.findByIdAndDelete(req.params.id)
