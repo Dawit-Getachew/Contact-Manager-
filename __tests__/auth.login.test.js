@@ -54,3 +54,70 @@ const jwt = require('jsonwebtoken');
       { expiresIn: '10m' }
     );
   });
+
+  it('should return an error when email or password is missing', async () => {
+    const mockRequest = {
+      body: {},
+    };
+
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    try{
+    await loginUser(mockRequest, mockResponse);
+    } catch(error){
+    expect(mockResponse.status).toHaveBeenCalledWith(400);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      error: 'All fields are mandatory!',
+    });
+  }
+  });
+
+  it('should return an error when email or password is missing', async () => {
+    const mockRequest = {
+      body: {},
+    };
+  
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  
+    try {
+      await loginUser(mockRequest, mockResponse);
+      // If no error was thrown, fail the test
+      // expect(true).toBe(false);
+    } catch (error) {
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'All fields are mandatory!',
+      });
+    }
+  });
+  
+
+  it('should handle errors and return an error response', async () => {
+    const mockError = new Error('Internal Server Error');
+  
+    const mockRequest = {
+      body: {
+        email: 'test@example.com',
+        password: 'password123',
+      },
+    };
+  
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  
+    jest.spyOn(User, 'findOne').mockReturnValue(mockError);
+    try{
+    await loginUser(mockRequest, mockResponse);
+    } catch(error){
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({ error: mockError.message });
+    }
+  });
+  
