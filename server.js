@@ -6,14 +6,6 @@ dotenv.config();
 const app = express()
 const PORT = process.env.PORT || 5000
 
-//complete the following test cases 
-/**
- 1. createContact.test.js
- 2. getSingleContact.test.js
- 3. updateContact.test.js
- 4. validateToken.test.js
- */
-
 connectDb()
 
 

@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 
-  it('should login a user successfully', async () => {
+  test('should login a user successfully', async () => {
     const mockRequest = {
       body: {
         email: 'test@example.com',
@@ -55,7 +55,7 @@ const jwt = require('jsonwebtoken');
     );
   });
 
-  it('should return an error when email or password is missing', async () => {
+  test('should return an error when email or password is missing', async () => {
     const mockRequest = {
       body: {},
     };
@@ -73,31 +73,8 @@ const jwt = require('jsonwebtoken');
     });
   }
   });
-
-  it('should return an error when email or password is missing', async () => {
-    const mockRequest = {
-      body: {},
-    };
   
-    const mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    };
-  
-    try {
-      await loginUser(mockRequest, mockResponse);
-      // If no error was thrown, fail the test
-      // expect(true).toBe(false);
-    } catch (error) {
-      expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        error: 'All fields are mandatory!',
-      });
-    }
-  });
-  
-
-  it('should handle errors and return an error response', async () => {
+  test('should handle database errors and return an error response', async () => {
     const mockError = new Error('Internal Server Error');
   
     const mockRequest = {
@@ -121,3 +98,79 @@ const jwt = require('jsonwebtoken');
     }
   });
   
+  test('should return an error when email is invalid', async () => {
+    const mockRequest = {
+    body: {
+      username: 'testuser',
+      email: 'test@examplecom',
+      password: 'password123',
+    },
+    }
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    }
+    try{
+      await loginUser(mockRequest, mockResponse);
+    }catch(error){
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        message: "Please enter a valid email address!",
+      });
+    }
+  });
+
+  test('should return an error when password is incorrect', async () => {
+    const mockRequest = {
+      body: {
+        email: 'john@gmail.com',
+        password: 'not correct password',
+      },
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+    jest.spyOn(User, 'findOne').mockResolvedValue({
+      _id: '123',
+      username: 'john',
+      email: 'john@gmail.com',
+      password: await bcrypt.hash('user password', 10),
+      user_id: '123',
+    });
+    try{
+      await loginUser(mockRequest, mockResponse);
+      fail('user should not be logged in');
+    }catch(error){
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: "Email or Password is not valid",
+      });
+    }
+  });
+
+  test('should return an error when user is not found', async () => {
+    const mockRequest = {
+      body: {
+        email: 'john@gmail.com',
+        password: 'user password',
+      },
+    };
+    const mockResponse = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+    jest.spyOn(User, 'findOne').mockResolvedValue(null);
+    try{
+      await loginUser(mockRequest, mockResponse);
+      fail('user should not be logged in');
+    }catch(error){
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: "Email or Password is not valid",
+      });
+    }
+  });
+

@@ -1,6 +1,6 @@
 const { currentUser } = require('../controllers/user-controller');
 
-  it('should return the current user information', async () => {
+  test('should return the current user information', async () => {
     const mockUser = {
       _id: '123',
       username: 'testuser',
@@ -22,7 +22,7 @@ const { currentUser } = require('../controllers/user-controller');
     expect(mockResponse.json).toHaveBeenCalledWith(mockUser);
   });
 
-  it('should return an empty user object if no user information is provided', async () => {
+  test('should return an empty user object if no user information is provided', async () => {
     const mockRequest = {
       user: {},
     };
@@ -36,7 +36,7 @@ const { currentUser } = require('../controllers/user-controller');
     expect(mockResponse.json).toHaveBeenCalledWith({});
   });
 
-  it('should handle errors and return an error response', async () => {
+  test('should handle errors and return an error response', async () => {
     const mockError = new Error('Internal Server Error');
 
     const mockRequest = {
@@ -48,14 +48,15 @@ const { currentUser } = require('../controllers/user-controller');
       json: jest.fn(),
     };
 
-    try{await currentUser(mockRequest, mockResponse);
+    try{
+      await currentUser(mockRequest, mockResponse);
     } catch(error){
     expect(error).toHaveBeenCalledWith(500);
     expect(error.json).toHaveBeenCalledWith({ error: mockError.message });
   }
   });
 
-  it('should handle and return additional user information', async () => {
+  test('should handle and return additional user information', async () => {
     const mockUser = {
       _id: '123',
       username: 'testuser',
@@ -76,7 +77,7 @@ const { currentUser } = require('../controllers/user-controller');
     expect(mockResponse.json).toHaveBeenCalledWith(mockUser);
   });
 
-  it('should handle an invalid user object and return an empty response', async () => {
+  test('should handle an invalid user object and return an empty response', async () => {
     const mockRequest = {
       user: {},
     };

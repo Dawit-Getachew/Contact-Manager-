@@ -1,30 +1,28 @@
 const validateToken = require("../middleware/validate-token-handler");
-
-const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 
 jest.mock("express-async-handler"); // Mock the asyncHandler module
 jest.mock("jsonwebtoken"); // Mock the jsonwebtoken module
 
-const req = {
+const mockRequest = {
   headers: {
     authorization: "Bearer YOUR_TOKEN",
   },
 };
 
-const res = {
+const mockResponse = {
   status: jest.fn().mockReturnThis(),
 };
 
 const next = jest.fn();
 
-it("should verify the token and set req.user if it is valid", async () => {
+test("should verify the token and set req.user if it is valid", async () => {
   const mockDecoded = { user: { id: "user123" } };
   jwt.verify.mockImplementation((token, secret, callback) => {
     callback(null, mockDecoded);
   });
 
-  await validateToken(req, res, next);
+  await validateToken(mockRequest, mockResponse, next);
 
   // Verify that jwt.verify was called with the correct token and secret
   expect(jwt.verify).toHaveBeenCalledWith(
@@ -34,46 +32,80 @@ it("should verify the token and set req.user if it is valid", async () => {
   );
 
   // Verify that req.user was set correctly
-  expect(req.user).toEqual(mockDecoded.user);
+  expect(mockRequest.user).toEqual(mockDecoded.user);
 
   // Verify that next was called
   expect(next).toHaveBeenCalled();
 });
 
 // Tests that the function correctly validates a valid token.
-it("test_valid_token", async () => {
-  const req = {
+test("test_valid_token", async () => {
+  const mockRequest = {
     headers: {
       Authorization: "Bearer valid_token",
     },
   };
-  const res = {};
+  const mockResponse = {};
   const next = jest.fn();
 
-  await validateToken(req, res, next);
+  await validateToken(mockRequest, mockResponse, next);
 
   expect(next).toHaveBeenCalled();
 });
 
 // Tests that the function throws an error when token is not included in the request header.
-it("test_missing_token", async () => {
-  const req = {
+test("test_missing_token", async () => {
+  const mockRequest = {
     headers: {},
   };
-  const res = {
+  const mockResponse = {
     status: jest.fn(),
-    send: jest.fn(),
+    json: jest.fn(),
   };
   const next = jest.fn();
   try {
-    await validateToken(req, res, next);
-    // Fail the test if the above line doesn't throw an error
-    // fail("Expected validateToken to throw an error");
+    await validateToken(mockRequest, mockResponse, next);
+    
   } catch (error) {
     expect(error.message).toBe(
       "User is not authorized or token is not included in the request"
     );
-    expect(res.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json).toHaveBeenCalledWith({
+      message: "User is not authorized or token is not included in the request",
+    });
     expect(next).not.toHaveBeenCalled();
   }
 });
+
+test("should throw an error if the user is not authorized", async ()=> {
+  const mockRequest = {
+    headers: {
+      authorization:
+        "Bearer invalid_token",
+      },
+  };
+  const mockResponse = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  };
+  const next = jest.fn();
+  
+  const mockDecoded = { user: { id: "user123" } };
+  jwt.verify.mockImplementation((token, secret, callback) => {
+    callback(Error, mockDecoded);
+  });
+  try {
+    await validateToken(mockRequest, mockResponse, next);
+  }
+  catch (error) {
+    expect(error.message).toBe(
+      "User is not authorized"
+    );
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
+    expect(mockResponse.json.mock.calls[0][0]).toEqual({
+      message: "User is not authorized",
+    });
+    expect(next).not.toHaveBeenCalled();
+  }
+})

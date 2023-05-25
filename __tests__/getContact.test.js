@@ -1,10 +1,11 @@
+const e = require("express");
 const { getContact } = require("../controllers/contact-controller");
 const Contact = require("../models/contact-model.js");
 
 jest.mock("../models/contact-model.js");
 
 // Test case: No contacts found
-it('should return an empty array when no contacts are found', async () => {
+test('should return an empty array when no contacts are found', async () => {
   const mockUserId = '123';
   const mockRequest = {
     user: { id: mockUserId },
@@ -23,7 +24,7 @@ it('should return an empty array when no contacts are found', async () => {
 });
 
 // Test case: Database error
-it('should handle database errors and return an error response', async () => {
+test('should handle database errors and return an error response', async () => {
   const mockUserId = '123';
   const mockError = new Error('Database error');
   const mockRequest = {
@@ -54,8 +55,7 @@ mockResponse = {
   status: jest.fn().mockReturnThis(),
 };
 
-
-it("should return contacts for a specific user", async () => {
+test("should return contacts for a specific user", async () => {
   const userId = "123456"; // replace with a valid user ID
 
   // Create a mock Contact.find() method that returns a predefined list of contacts
@@ -75,4 +75,21 @@ it("should return contacts for a specific user", async () => {
 
   // Verify that Contact.find() was called with the correct user ID
   expect(Contact.find).toHaveBeenCalledWith({ user_id: userId });
+});
+
+test("should return an error if the user ID is invalid", async () => {
+  const mockRequest = {
+    user: {
+      id: "",
+    },
+  };
+  try{
+  await getContact(mockRequest, mockResponse);
+  }catch(error){
+    expect(mockResponse.status.mock.calls[0][0]).toBe(400);
+    expect(mockResponse.json.mock.calls[0][0]).toEqual({
+      message: "Please provide user id!",
+    });
+  }
+
 });
