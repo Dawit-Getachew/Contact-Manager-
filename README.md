@@ -42,7 +42,8 @@ Test written for
 7. auth.register.test.js for register, 8 test cases 
 8. auth.login.test.js for login, 6 test cases
 9. auth.currentUser.test.js for current user, 5 test cases
+10. email-phone-validator.test.js for validating email and phone number, 4 tests
 
-Tital Test Suites = 9
-Total TestCases = 48
+Tital Test Suites = 10
+Total TestCases = 52
 
